@@ -129,3 +129,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node
+**/node_modules/
+**/dist/
+
+# Screenshots
+**/temporary_screenshots

@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NarraNexus — AI Smart Ring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: {
+              50: '#F4F6F8',
+              100: '#EBECED',
+              200: '#B0C5D6',
+              300: '#94B3D3',
+              400: '#6996CC',
+              500: '#5D8BB4',
+              600: '#3B68A2',
+              700: '#1C3959',
+              800: '#122640',
+              900: '#0B1829',
+            },
+            gold: {
+              400: '#D4A04A',
+              500: '#AE7133',
+              600: '#8B5A28',
+            }
+          },
+          fontFamily: {
+            display: ['Cormorant Garamond', 'serif'],
+            body: ['DM Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: #F4F6F8; overflow-x: hidden; }
+
+    /* ── Ink-wash mountain SVG background ── */
+    .ink-mountains {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* ── Floating widget cards ── */
+    .widget-card {
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow:
+        0 4px 8px -2px rgba(28,57,89,0.05),
+        0 16px 32px -4px rgba(28,57,89,0.10),
+        0 40px 80px -10px rgba(28,57,89,0.08);
+      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .widget-card:hover {
+      transform: translateY(-6px);
+      box-shadow:
+        0 8px 16px -3px rgba(28,57,89,0.07),
+        0 24px 48px -8px rgba(28,57,89,0.14),
+        0 56px 96px -16px rgba(28,57,89,0.12);
+    }
+    /* Extra shadow for the hero sleep card */
+    .hero-card-shadow {
+      box-shadow:
+        0 8px 16px -3px rgba(28,57,89,0.06),
+        0 24px 48px -6px rgba(28,57,89,0.12),
+        0 48px 100px -12px rgba(28,57,89,0.10),
+        0 0 0 1px rgba(255,255,255,0.5);
+    }
+
+    /* ── Sleep chart bars ── */
+    .sleep-bar {
+      background: linear-gradient(180deg, #3B68A2 0%, #6996CC 100%);
+      border-radius: 2px 2px 0 0;
+      transition: height 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    /* ── Circular progress ring ── */
+    .progress-ring-circle {
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    /* ── Grain texture overlay ── */
+    .grain-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.025;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px;
+    }
+
+    /* ── Entry animations ── */
+    @keyframes fadeUpIn {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes mountainFade {
+      from { opacity: 0; transform: translateY(30px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .anim-fade-up { animation: fadeUpIn 0.9s cubic-bezier(0.23, 1, 0.32, 1) both; }
+    .anim-fade-in { animation: fadeIn 1s ease both; }
+    .anim-scale-in { animation: scaleIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; }
+    .anim-float { animation: floatSlow 6s ease-in-out infinite; }
+    .anim-mountain { animation: mountainFade 1.4s cubic-bezier(0.23, 1, 0.32, 1) both; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+    .delay-600 { animation-delay: 0.6s; }
+    .delay-700 { animation-delay: 0.7s; }
+    .delay-800 { animation-delay: 0.8s; }
+    .delay-1000 { animation-delay: 1.0s; }
+    .delay-1200 { animation-delay: 1.2s; }
+
+    /* ── Stat badge pills ── */
+    .stat-pill {
+      background: rgba(59,104,162,0.08);
+      border: 1px solid rgba(59,104,162,0.12);
+      border-radius: 12px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #3B68A2;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Dividers ── */
+    .subtle-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(28,57,89,0.08), transparent);
+    }
+
+    /* ── Heart pulse animation ── */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .heart-pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+    /* ── Nav blur ── */
+    .nav-blur {
+      backdrop-filter: blur(16px) saturate(1.3);
+      -webkit-backdrop-filter: blur(16px) saturate(1.3);
+      background: rgba(244,246,248,0.8);
+      border-bottom: 1px solid rgba(28,57,89,0.06);
+    }
+
+    /* ── Scroll reveal ── */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1), transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Custom scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(28,57,89,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(28,57,89,0.25); }
+  </style>
+</head>
+<body class="grain-overlay">
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- NAVIGATION                                            -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <nav class="nav-blur fixed top-0 left-0 right-0 z-50 anim-fade-in">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <img src="brand_assets/20260221-220434.jpeg" alt="NarraNexus" class="h-9 w-auto object-contain">
+        <span class="font-display text-ink-700 hidden sm:inline" style="font-size: 1.15rem; font-weight: 500; letter-spacing: -0.02em;">NarraNexus</span>
+      </div>
+      <!-- Nav links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="font-body text-sm text-ink-700 tracking-wide hover:text-ink-600 transition-colors duration-300" style="font-weight:400;">Features</a>
+        <a href="#insights" class="font-body text-sm text-ink-700 tracking-wide hover:text-ink-600 transition-colors duration-300" style="font-weight:400;">Insights</a>
+        <a href="#about" class="font-body text-sm text-ink-700 tracking-wide hover:text-ink-600 transition-colors duration-300" style="font-weight:400;">About</a>
+      </div>
+      <!-- CTA -->
+      <a href="#" class="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-600" style="background: linear-gradient(135deg, #3B68A2 0%, #1C3959 100%); box-shadow: 0 2px 8px rgba(28,57,89,0.25);">
+        Get Started
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </a>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- HERO SECTION — Ink-Wash Mountains + Sleep Widget      -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <!-- Sky gradient base — very light, close to reference #EBECED -->
+    <div class="absolute inset-0" style="background: linear-gradient(180deg, #F0F2F4 0%, #EBECED 25%, #E4E9EE 55%, #DCE3EB 100%);"></div>
+
+    <!-- Ink-wash mountain landscape SVG -->
+    <div class="ink-mountains anim-mountain delay-200">
+      <svg viewBox="0 0 1920 1000" fill="none" xmlns="http://www.w3.org/2000/svg" class="absolute bottom-0 w-full" style="min-width:1200px;" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <!-- Gradient definitions for layered depth -->
+          <linearGradient id="mist1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#94B3D3" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#B0C5D6" stop-opacity="0.03"/>
+          </linearGradient>
+          <linearGradient id="mist2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6996CC" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#94B3D3" stop-opacity="0.06"/>
+          </linearGradient>
+          <linearGradient id="midMtn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5D8BB4" stop-opacity="0.45"/>
+            <stop offset="50%" stop-color="#6996CC" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#B0C5D6" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="nearMtn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3B68A2" stop-opacity="0.65"/>
+            <stop offset="35%" stop-color="#5D8BB4" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#94B3D3" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="closeMtn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1C3959" stop-opacity="0.7"/>
+            <stop offset="40%" stop-color="#3B68A2" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#6996CC" stop-opacity="0.06"/>
+          </linearGradient>
+          <linearGradient id="foreground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#122640" stop-opacity="0.75"/>
+            <stop offset="60%" stop-color="#1C3959" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#3B68A2" stop-opacity="0.1"/>
+          </linearGradient>
+          <!-- Ink texture filters -->
+          <filter id="blur1" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="10"/>
+          </filter>
+          <filter id="blur2" x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur stdDeviation="5"/>
+          </filter>
+          <filter id="blur3" x="-3%" y="-3%" width="106%" height="106%">
+            <feGaussianBlur stdDeviation="2.5"/>
+          </filter>
+          <filter id="inkEdge" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="5" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="inkEdge2" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="4" seed="3" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+
+        <!-- Layer 1: Far distant peaks (very faint, misty) -->
+        <path d="M-100 700 L80 480 L200 520 L350 380 L480 450 L600 360 L720 420 L880 310 L1020 390 L1150 340 L1300 400 L1420 350 L1580 410 L1720 370 L1860 430 L2020 380 L2020 1000 L-100 1000Z" fill="url(#mist1)" filter="url(#blur1)"/>
+
+        <!-- Mist band -->
+        <ellipse cx="960" cy="600" rx="1100" ry="30" fill="white" opacity="0.12" filter="url(#blur1)"/>
+
+        <!-- Layer 2: Mid-distance peaks -->
+        <path d="M-100 740 L50 520 L150 560 L300 420 L410 480 L520 380 L640 440 L760 360 L900 420 L1020 370 L1150 430 L1280 380 L1420 440 L1560 370 L1700 420 L1840 380 L2020 450 L2020 1000 L-100 1000Z" fill="url(#mist2)" filter="url(#blur2)"/>
+
+        <!-- Mist wisps -->
+        <ellipse cx="350" cy="640" rx="450" ry="22" fill="white" opacity="0.1" filter="url(#blur1)"/>
+        <ellipse cx="1400" cy="620" rx="400" ry="18" fill="#B0C5D6" opacity="0.08" filter="url(#blur1)"/>
+
+        <!-- Layer 3: Mid mountains with ink texture -->
+        <path d="M-100 790 L0 580 L80 620 L180 480 L260 530 L360 420 L440 480 L540 380 L640 440 L740 370 L850 430 L950 380 L1060 440 L1160 390 L1280 450 L1380 400 L1500 460 L1620 400 L1740 450 L1860 420 L2020 460 L2020 1000 L-100 1000Z" fill="url(#midMtn)" filter="url(#inkEdge)"/>
+
+        <!-- Layer 4: LEFT mountain cluster — tall dramatic sharp ink-wash peaks -->
+        <path d="M-200 1000 L-120 750 L-60 780 L20 620 L60 660 L120 480 L155 530 L200 380 L230 420 L280 310 L310 350 L360 280 L385 330 L420 390 L460 430 L510 460 L560 500 L630 540 L720 580 L840 640 L1000 720 L1920 1000Z" fill="url(#nearMtn)" filter="url(#inkEdge)"/>
+
+        <!-- Layer 4: RIGHT mountain cluster — similar sharp peaks -->
+        <path d="M900 1000 L1040 720 L1100 750 L1180 600 L1220 640 L1300 480 L1340 520 L1400 400 L1430 440 L1490 330 L1520 370 L1580 290 L1610 340 L1660 400 L1710 440 L1770 480 L1830 450 L1880 420 L1920 450 L2020 480 L2020 1000Z" fill="url(#nearMtn)" filter="url(#inkEdge2)"/>
+
+        <!-- White mist between near and close mountains -->
+        <ellipse cx="960" cy="760" rx="800" ry="45" fill="white" opacity="0.22" filter="url(#blur1)"/>
+        <ellipse cx="280" cy="790" rx="300" ry="28" fill="white" opacity="0.15" filter="url(#blur1)"/>
+        <ellipse cx="1580" cy="770" rx="280" ry="22" fill="white" opacity="0.12" filter="url(#blur1)"/>
+
+        <!-- Layer 5: Close left peaks — darkest, tallest, most textured -->
+        <path d="M-250 1000 L-150 820 L-80 850 L-20 700 L20 730 L80 580 L110 620 L170 480 L195 520 L250 420 L275 460 L320 510 L370 550 L430 600 L500 660 L580 1000Z" fill="url(#closeMtn)" filter="url(#inkEdge)"/>
+
+        <!-- Layer 5: Close right peaks -->
+        <path d="M1380 1000 L1440 800 L1490 830 L1550 680 L1580 710 L1640 560 L1670 600 L1730 480 L1760 520 L1810 440 L1840 480 L1890 530 L1920 500 L2020 1000Z" fill="url(#closeMtn)" filter="url(#inkEdge2)"/>
+
+        <!-- Layer 6: Foreground silhouettes — very close, darkest -->
+        <path d="M-250 1000 L-160 880 L-100 820 L-40 850 L30 740 L60 770 L120 680 L150 720 L200 780 L260 1000Z" fill="url(#foreground)" filter="url(#inkEdge)"/>
+        <path d="M1700 1000 L1750 840 L1800 810 L1840 760 L1870 790 L1920 710 L2020 750 L2020 1000Z" fill="url(#foreground)" filter="url(#inkEdge2)"/>
+
+        <!-- Subtle foreground mist at bottom -->
+        <rect x="-100" y="920" width="2120" height="80" fill="white" opacity="0.06" filter="url(#blur1)"/>
+      </svg>
+    </div>
+
+    <!-- Hero content -->
+    <div class="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto" style="margin-top:-20px;">
+      <!-- Tagline pill -->
+      <div class="anim-fade-up delay-200 stat-pill mb-6" style="background: rgba(59,104,162,0.06); border-color: rgba(59,104,162,0.1);">
+        AI-Powered Health Tracking
+      </div>
+
+      <!-- Heading -->
+      <h1 class="font-display text-ink-700 anim-fade-up delay-300" style="font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 400; line-height: 1.05; letter-spacing: -0.03em;">
+        Your Health,<br>
+        <span style="color: #3B68A2;">Beautifully Measured</span>
+      </h1>
+
+      <p class="font-body text-ink-500 mt-5 max-w-xl anim-fade-up delay-400" style="font-size: 1.05rem; line-height: 1.7; font-weight: 300;">
+        Elegant widgets that transform complex health data into clarity. Sleep, heart rate, activity — all presented with the serenity of ink on paper.
+      </p>
+
+      <!-- Main floating widget — Sleep Card (matches reference exactly) -->
+      <div class="widget-card hero-card-shadow anim-scale-in delay-600 anim-float mt-12 p-0 overflow-hidden" style="width: 380px; max-width: 90vw;">
+        <!-- Sky header with cloud/moon icon area -->
+        <div class="relative overflow-hidden" style="height: 150px; background: linear-gradient(180deg, #EAF2FA 0%, #DDE9F3 30%, #D0E0EE 60%, #C6D9E8 100%);">
+          <!-- Soft sky clouds -->
+          <div class="absolute" style="top: 8px; left: 20px; width: 100px; height: 35px; background: white; border-radius: 35px; opacity: 0.65; filter: blur(6px);"></div>
+          <div class="absolute" style="top: 18px; left: 60px; width: 70px; height: 28px; background: white; border-radius: 28px; opacity: 0.5; filter: blur(4px);"></div>
+          <div class="absolute" style="top: 12px; right: 30px; width: 80px; height: 30px; background: white; border-radius: 30px; opacity: 0.55; filter: blur(5px);"></div>
+          <div class="absolute" style="top: 5px; right: 80px; width: 50px; height: 20px; background: white; border-radius: 20px; opacity: 0.4; filter: blur(3px);"></div>
+          <div class="absolute" style="top: 30px; left: 140px; width: 60px; height: 22px; background: white; border-radius: 22px; opacity: 0.35; filter: blur(3px);"></div>
+          <!-- 3D cloud + moon icon (using emoji as placeholder for 3D render) -->
+          <div class="absolute left-1/2 -translate-x-1/2" style="bottom: -4px; font-size: 56px; filter: drop-shadow(0 6px 16px rgba(28,57,89,0.18)); line-height: 1;">
+            🌧️
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="px-7 pt-5 pb-6">
+          <p class="font-body text-ink-400 text-sm text-center" style="font-weight: 400;">Time Asleep</p>
+          <p class="font-display text-ink-800 text-center mt-1" style="font-size: 2.4rem; font-weight: 500; letter-spacing: -0.02em;">8h 0m</p>
+          <p class="font-body text-ink-300 text-xs text-center mt-1" style="font-weight: 400;">Total duration 8h 30m</p>
+
+          <!-- Sleep stages -->
+          <div class="subtle-divider my-5"></div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="text-center">
+              <p class="text-xs font-medium" style="color: #3B68A2;">Awake</p>
+              <p class="font-body text-ink-700 mt-1" style="font-size: 1.05rem; font-weight: 600;">0h 55m</p>
+            </div>
+            <div class="text-center" style="border-left: 1px solid rgba(28,57,89,0.08); border-right: 1px solid rgba(28,57,89,0.08);">
+              <p class="text-xs font-medium" style="color: #5D8BB4;">Light</p>
+              <p class="font-body text-ink-700 mt-1" style="font-size: 1.05rem; font-weight: 600;">1h 25m</p>
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-medium" style="color: #1C3959;">Deep</p>
+              <p class="font-body text-ink-700 mt-1" style="font-size: 1.05rem; font-weight: 600;">4h 1m</p>
+            </div>
+          </div>
+
+          <!-- Sleep chart -->
+          <div class="mt-5 relative" style="height: 80px;">
+            <!-- Y-axis labels -->
+            <div class="absolute right-0 top-0 text-right" style="font-size: 9px; color: #94B3D3;">1s</div>
+            <div class="absolute right-0 top-1/2 -translate-y-1/2 text-right" style="font-size: 9px; color: #94B3D3;">30s</div>
+            <div class="absolute right-0 bottom-0 text-right" style="font-size: 9px; color: #94B3D3;">0s</div>
+            <!-- Grid lines -->
+            <div class="absolute left-0 right-5 top-0" style="height: 1px; background: rgba(28,57,89,0.05);"></div>
+            <div class="absolute left-0 right-5 top-1/2" style="height: 1px; background: rgba(28,57,89,0.05);"></div>
+            <div class="absolute left-0 right-5 bottom-0" style="height: 1px; background: rgba(28,57,89,0.05);"></div>
+            <!-- Bars container -->
+            <div class="flex items-end gap-[3px] h-full pr-8 pl-1">
+              <div class="sleep-bar" style="width:6px; height:8%;"></div>
+              <div class="sleep-bar" style="width:6px; height:5%;"></div>
+              <div class="sleep-bar" style="width:6px; height:3%;"></div>
+              <div class="sleep-bar" style="width:6px; height:4%;"></div>
+              <div class="sleep-bar" style="width:6px; height:6%;"></div>
+              <div class="sleep-bar" style="width:6px; height:30%;"></div>
+              <div class="sleep-bar" style="width:6px; height:10%;"></div>
+              <div class="sleep-bar" style="width:6px; height:5%;"></div>
+              <div class="sleep-bar" style="width:6px; height:3%;"></div>
+              <div class="sleep-bar" style="width:6px; height:4%;"></div>
+              <div class="sleep-bar" style="width:6px; height:7%;"></div>
+              <div class="sleep-bar" style="width:6px; height:12%;"></div>
+              <div class="sleep-bar" style="width:6px; height:8%;"></div>
+              <div class="sleep-bar" style="width:6px; height:15%;"></div>
+              <div class="sleep-bar" style="width:6px; height:35%;"></div>
+              <div class="sleep-bar" style="width:6px; height:45%;"></div>
+              <div class="sleep-bar" style="width:6px; height:55%;"></div>
+              <div class="sleep-bar" style="width:6px; height:40%;"></div>
+              <div class="sleep-bar" style="width:6px; height:60%;"></div>
+              <div class="sleep-bar" style="width:6px; height:50%;"></div>
+              <div class="sleep-bar" style="width:6px; height:70%;"></div>
+              <div class="sleep-bar" style="width:6px; height:35%;"></div>
+              <div class="sleep-bar" style="width:6px; height:25%;"></div>
+              <div class="sleep-bar" style="width:6px; height:45%;"></div>
+              <div class="sleep-bar" style="width:6px; height:30%;"></div>
+              <div class="sleep-bar" style="width:6px; height:18%;"></div>
+              <div class="sleep-bar" style="width:6px; height:10%;"></div>
+              <div class="sleep-bar" style="width:6px; height:5%;"></div>
+            </div>
+            <!-- X-axis labels -->
+            <div class="flex justify-between pr-8 pl-1 mt-1">
+              <span style="font-size: 9px; color: #94B3D3;">0</span>
+              <span style="font-size: 9px; color: #94B3D3;">06</span>
+              <span style="font-size: 9px; color: #94B3D3;">12</span>
+              <span style="font-size: 9px; color: #94B3D3;">18</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carousel dot indicator (as in reference) -->
+    <div class="absolute z-20" style="right: calc(50% - 240px); top: 50%; transform: translateY(-50%);">
+      <div class="flex flex-col gap-2">
+        <div class="w-2 h-2 rounded-full" style="background: #1C3959;"></div>
+        <div class="w-1.5 h-1.5 rounded-full" style="background: #B0C5D6;"></div>
+        <div class="w-1.5 h-1.5 rounded-full" style="background: #B0C5D6;"></div>
+      </div>
+    </div>
+
+    <!-- Bottom fade to white -->
+    <div class="absolute bottom-0 left-0 right-0 h-32" style="background: linear-gradient(180deg, transparent, #F4F6F8);"></div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- FEATURES — Widget Grid Section                        -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section id="features" class="relative py-24 px-6" style="background: #F4F6F8;">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section header -->
+      <div class="text-center mb-16 scroll-reveal">
+        <p class="stat-pill inline-block mb-4">Widget Collection</p>
+        <h2 class="font-display text-ink-700" style="font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400; letter-spacing: -0.03em;">
+          Every Metric, <span style="color: #3B68A2;">Thoughtfully Designed</span>
+        </h2>
+        <p class="font-body text-ink-400 mt-4 max-w-lg mx-auto" style="font-weight: 300; line-height: 1.7;">
+          Health data presented as serene, focused widgets — each one a window into your wellbeing.
+        </p>
+      </div>
+
+      <!-- Widget grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Widget 1: Heart Rate -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(59,104,162,0.1), rgba(105,150,204,0.08));">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B68A2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Heart Rate</p>
+                <p class="font-body text-ink-300" style="font-size: 10px;">Live monitoring</p>
+              </div>
+            </div>
+            <div class="heart-pulse">
+              <span class="stat-pill">Normal</span>
+            </div>
+          </div>
+          <!-- BPM display -->
+          <div class="text-center py-4">
+            <p class="font-display text-ink-800" style="font-size: 3.5rem; font-weight: 500; letter-spacing: -0.03em; line-height: 1;">72</p>
+            <p class="font-body text-ink-400 text-sm mt-1">BPM</p>
+          </div>
+          <!-- Heart rate wave -->
+          <div class="mt-3" style="height: 50px; overflow: hidden;">
+            <svg viewBox="0 0 300 50" fill="none" class="w-full" style="height:50px;">
+              <path d="M0 25 L30 25 L40 25 L50 15 L55 35 L60 10 L65 40 L70 20 L80 25 L110 25 L120 25 L130 15 L135 35 L140 10 L145 40 L150 20 L160 25 L190 25 L200 25 L210 15 L215 35 L220 10 L225 40 L230 20 L240 25 L270 25 L280 25 L290 15 L295 35 L300 25" stroke="#3B68A2" stroke-width="2" fill="none" opacity="0.6"/>
+              <path d="M0 25 L30 25 L40 25 L50 15 L55 35 L60 10 L65 40 L70 20 L80 25 L110 25 L120 25 L130 15 L135 35 L140 10 L145 40 L150 20 L160 25 L190 25 L200 25 L210 15 L215 35 L220 10 L225 40 L230 20 L240 25 L270 25 L280 25 L290 15 L295 35 L300 25" stroke="url(#heartGrad)" stroke-width="2.5" fill="none"/>
+              <defs>
+                <linearGradient id="heartGrad" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#6996CC"/>
+                  <stop offset="50%" stop-color="#3B68A2"/>
+                  <stop offset="100%" stop-color="#1C3959"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <!-- Min/Max -->
+          <div class="flex justify-between mt-4">
+            <div>
+              <p class="text-xs text-ink-300">Min</p>
+              <p class="font-body text-ink-600 text-sm font-medium">58 bpm</p>
+            </div>
+            <div>
+              <p class="text-xs text-ink-300">Avg</p>
+              <p class="font-body text-ink-600 text-sm font-medium">72 bpm</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-ink-300">Max</p>
+              <p class="font-body text-ink-600 text-sm font-medium">98 bpm</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widget 2: Activity Ring -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(174,113,51,0.1), rgba(212,160,74,0.08));">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AE7133" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            <div>
+              <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Daily Activity</p>
+              <p class="font-body text-ink-300" style="font-size: 10px;">Today's progress</p>
+            </div>
+          </div>
+          <!-- Circular progress rings -->
+          <div class="flex justify-center py-4">
+            <div class="relative" style="width: 160px; height: 160px;">
+              <!-- Move ring (outermost) -->
+              <svg class="absolute inset-0" width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" stroke="rgba(59,104,162,0.1)" stroke-width="10" fill="none"/>
+                <circle cx="80" cy="80" r="70" stroke="#3B68A2" stroke-width="10" fill="none" stroke-linecap="round" class="progress-ring-circle" stroke-dasharray="440" stroke-dashoffset="88"/>
+              </svg>
+              <!-- Exercise ring (middle) -->
+              <svg class="absolute inset-0" width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="55" stroke="rgba(174,113,51,0.1)" stroke-width="10" fill="none"/>
+                <circle cx="80" cy="80" r="55" stroke="#AE7133" stroke-width="10" fill="none" stroke-linecap="round" class="progress-ring-circle" stroke-dasharray="345.6" stroke-dashoffset="103.7"/>
+              </svg>
+              <!-- Stand ring (innermost) -->
+              <svg class="absolute inset-0" width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="40" stroke="rgba(93,139,180,0.1)" stroke-width="10" fill="none"/>
+                <circle cx="80" cy="80" r="40" stroke="#5D8BB4" stroke-width="10" fill="none" stroke-linecap="round" class="progress-ring-circle" stroke-dasharray="251.3" stroke-dashoffset="50.3"/>
+              </svg>
+              <!-- Center text -->
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <p class="font-display text-ink-800" style="font-size: 1.6rem; font-weight: 500; line-height: 1;">486</p>
+                <p class="font-body text-ink-300 text-xs">kcal</p>
+              </div>
+            </div>
+          </div>
+          <!-- Ring labels -->
+          <div class="flex justify-between mt-4 px-2">
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full" style="background: #3B68A2;"></div>
+              <div>
+                <p class="text-xs text-ink-400">Move</p>
+                <p class="font-body text-ink-600 text-sm font-medium">486/600</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full" style="background: #AE7133;"></div>
+              <div>
+                <p class="text-xs text-ink-400">Exercise</p>
+                <p class="font-body text-ink-600 text-sm font-medium">28/30</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full" style="background: #5D8BB4;"></div>
+              <div>
+                <p class="text-xs text-ink-400">Stand</p>
+                <p class="font-body text-ink-600 text-sm font-medium">10/12</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widget 3: Blood Oxygen (SpO2) -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(28,57,89,0.1), rgba(59,104,162,0.08));">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C3959" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Blood Oxygen</p>
+                <p class="font-body text-ink-300" style="font-size: 10px;">SpO2 level</p>
+              </div>
+            </div>
+            <span class="stat-pill" style="background: rgba(28,57,89,0.06); color: #1C3959;">Optimal</span>
+          </div>
+          <!-- SpO2 display -->
+          <div class="flex justify-center py-4">
+            <div class="relative" style="width: 140px; height: 140px;">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" stroke="rgba(28,57,89,0.06)" stroke-width="12" fill="none"/>
+                <circle cx="70" cy="70" r="60" stroke="url(#spo2Grad)" stroke-width="12" fill="none" stroke-linecap="round" class="progress-ring-circle" stroke-dasharray="377" stroke-dashoffset="18.85"/>
+                <defs>
+                  <linearGradient id="spo2Grad" x1="0" y1="0" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#3B68A2"/>
+                    <stop offset="100%" stop-color="#1C3959"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <p class="font-display text-ink-800" style="font-size: 2.2rem; font-weight: 500; line-height: 1;">98<span style="font-size: 1rem; color: #94B3D3;">%</span></p>
+              </div>
+            </div>
+          </div>
+          <!-- Range bar -->
+          <div class="mt-4">
+            <div class="flex justify-between text-xs text-ink-300 mb-2">
+              <span>90%</span>
+              <span>100%</span>
+            </div>
+            <div class="h-2 rounded-full" style="background: rgba(28,57,89,0.06);">
+              <div class="h-2 rounded-full" style="width: 80%; background: linear-gradient(90deg, #5D8BB4, #1C3959);"></div>
+            </div>
+            <p class="text-xs text-ink-300 mt-3 text-center">Measured 5 min ago</p>
+          </div>
+        </div>
+
+        <!-- Widget 4: Stress Level -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(105,150,204,0.12), rgba(93,139,180,0.08));">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5D8BB4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </div>
+            <div>
+              <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Stress Level</p>
+              <p class="font-body text-ink-300" style="font-size: 10px;">HRV-based analysis</p>
+            </div>
+          </div>
+          <!-- Gauge-style display -->
+          <div class="flex justify-center py-2">
+            <div class="relative" style="width: 180px; height: 100px; overflow: hidden;">
+              <svg width="180" height="100" viewBox="0 0 180 100">
+                <!-- Background arc -->
+                <path d="M 15 90 A 75 75 0 0 1 165 90" stroke="rgba(93,139,180,0.1)" stroke-width="14" fill="none" stroke-linecap="round"/>
+                <!-- Filled arc (low stress ~30%) -->
+                <path d="M 15 90 A 75 75 0 0 1 70 20" stroke="url(#stressGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
+                <defs>
+                  <linearGradient id="stressGrad" x1="15" y1="90" x2="165" y2="90" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#6996CC"/>
+                    <stop offset="100%" stop-color="#3B68A2"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                <p class="font-display text-ink-800" style="font-size: 2rem; font-weight: 500; line-height: 1;">28</p>
+                <p class="font-body text-ink-300 text-xs">Low stress</p>
+              </div>
+            </div>
+          </div>
+          <!-- Timeline -->
+          <div class="mt-5 flex items-end gap-1" style="height: 40px;">
+            <div style="flex:1; height:30%; background: rgba(105,150,204,0.2); border-radius: 2px;"></div>
+            <div style="flex:1; height:20%; background: rgba(105,150,204,0.2); border-radius: 2px;"></div>
+            <div style="flex:1; height:40%; background: rgba(105,150,204,0.3); border-radius: 2px;"></div>
+            <div style="flex:1; height:60%; background: rgba(105,150,204,0.3); border-radius: 2px;"></div>
+            <div style="flex:1; height:35%; background: rgba(105,150,204,0.25); border-radius: 2px;"></div>
+            <div style="flex:1; height:25%; background: rgba(105,150,204,0.2); border-radius: 2px;"></div>
+            <div style="flex:1; height:45%; background: rgba(105,150,204,0.3); border-radius: 2px;"></div>
+            <div style="flex:1; height:50%; background: rgba(59,104,162,0.4); border-radius: 2px;"></div>
+            <div style="flex:1; height:30%; background: rgba(105,150,204,0.25); border-radius: 2px;"></div>
+            <div style="flex:1; height:20%; background: rgba(105,150,204,0.2); border-radius: 2px;"></div>
+            <div style="flex:1; height:15%; background: rgba(105,150,204,0.15); border-radius: 2px;"></div>
+            <div style="flex:1; height:28%; background: rgba(105,150,204,0.2); border-radius: 2px;"></div>
+          </div>
+          <div class="flex justify-between mt-1">
+            <span style="font-size: 9px; color: #94B3D3;">6am</span>
+            <span style="font-size: 9px; color: #94B3D3;">12pm</span>
+            <span style="font-size: 9px; color: #94B3D3;">6pm</span>
+          </div>
+        </div>
+
+        <!-- Widget 5: Temperature -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(174,113,51,0.1), rgba(212,160,74,0.06));">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AE7133" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+              </div>
+              <div>
+                <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Skin Temperature</p>
+                <p class="font-body text-ink-300" style="font-size: 10px;">Deviation from baseline</p>
+              </div>
+            </div>
+          </div>
+          <!-- Temperature value -->
+          <div class="text-center py-3">
+            <p class="font-display" style="font-size: 3rem; font-weight: 500; letter-spacing: -0.03em; line-height: 1; color: #AE7133;">
+              +0.2<span style="font-size: 1.2rem; color: #D4A04A;">°C</span>
+            </p>
+            <p class="font-body text-ink-300 text-xs mt-2">Within normal range</p>
+          </div>
+          <!-- 7-day trend line -->
+          <div class="mt-4" style="height: 60px;">
+            <svg viewBox="0 0 300 60" fill="none" class="w-full" style="height: 60px;">
+              <path d="M0 40 C30 38, 50 35, 80 30 S130 20, 160 25 S210 35, 240 28 S280 22, 300 20" stroke="#AE7133" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M0 40 C30 38, 50 35, 80 30 S130 20, 160 25 S210 35, 240 28 S280 22, 300 20 L300 60 L0 60Z" fill="url(#tempFill)" opacity="0.15"/>
+              <defs>
+                <linearGradient id="tempFill" x1="0" y1="0" x2="0" y2="60" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#AE7133"/>
+                  <stop offset="100%" stop-color="#AE7133" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="flex justify-between mt-1">
+            <span style="font-size: 9px; color: #94B3D3;">Mon</span>
+            <span style="font-size: 9px; color: #94B3D3;">Tue</span>
+            <span style="font-size: 9px; color: #94B3D3;">Wed</span>
+            <span style="font-size: 9px; color: #94B3D3;">Thu</span>
+            <span style="font-size: 9px; color: #94B3D3;">Fri</span>
+            <span style="font-size: 9px; color: #94B3D3;">Sat</span>
+            <span style="font-size: 9px; color: #94B3D3;">Sun</span>
+          </div>
+        </div>
+
+        <!-- Widget 6: Steps -->
+        <div class="widget-card p-7 scroll-reveal">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(59,104,162,0.1), rgba(105,150,204,0.06));">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B68A2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4v16"/><path d="M17 4v16"/><path d="M19 4H9.5a4.5 4.5 0 0 0 0 9H13"/></svg>
+            </div>
+            <div>
+              <p class="font-body text-xs text-ink-400" style="font-weight: 400;">Steps</p>
+              <p class="font-body text-ink-300" style="font-size: 10px;">Daily count</p>
+            </div>
+          </div>
+          <!-- Steps number -->
+          <div class="text-center py-3">
+            <p class="font-display text-ink-800" style="font-size: 3rem; font-weight: 500; letter-spacing: -0.03em; line-height: 1;">
+              8,432
+            </p>
+            <p class="font-body text-ink-300 text-xs mt-2">Goal: 10,000 steps</p>
+          </div>
+          <!-- Progress bar -->
+          <div class="mt-4">
+            <div class="h-3 rounded-full" style="background: rgba(59,104,162,0.08);">
+              <div class="h-3 rounded-full relative" style="width: 84%; background: linear-gradient(90deg, #6996CC, #3B68A2);">
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-white" style="background: #3B68A2; box-shadow: 0 2px 6px rgba(59,104,162,0.3);"></div>
+              </div>
+            </div>
+            <p class="text-xs text-ink-400 mt-2 text-center font-medium">84% complete</p>
+          </div>
+          <!-- Weekly comparison -->
+          <div class="flex items-end gap-2 mt-5" style="height: 50px;">
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 25px; background: rgba(59,104,162,0.15);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">M</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 35px; background: rgba(59,104,162,0.2);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">T</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 30px; background: rgba(59,104,162,0.18);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">W</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 40px; background: rgba(59,104,162,0.25);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">T</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 20px; background: rgba(59,104,162,0.12);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">F</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 45px; background: rgba(59,104,162,0.3);"></div>
+              <span style="font-size: 8px; color: #94B3D3;">S</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full rounded-sm" style="height: 38px; background: linear-gradient(180deg, #3B68A2, #6996CC); border-radius: 2px;"></div>
+              <span style="font-size: 8px; color: #3B68A2; font-weight: 600;">S</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- INSIGHTS SECTION — Second Mountain Range              -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section id="insights" class="relative py-32 px-6 overflow-hidden" style="background: linear-gradient(180deg, #F4F6F8 0%, #E4ECF2 50%, #D6E0EA 100%);">
+    <!-- Mountain backdrop again -->
+    <div class="absolute inset-0 pointer-events-none">
+      <svg viewBox="0 0 1920 500" fill="none" class="absolute bottom-0 w-full" style="min-width: 1200px;" preserveAspectRatio="xMidYMax slice">
+        <path d="M0 500 L100 350 L250 400 L400 280 L550 350 L700 260 L850 330 L1000 240 L1150 310 L1300 250 L1450 320 L1600 260 L1750 310 L1920 500Z" fill="url(#mist2)" opacity="0.6"/>
+        <path d="M0 500 L150 380 L300 420 L500 300 L680 370 L850 290 L1050 360 L1200 280 L1400 350 L1600 300 L1800 370 L1920 500Z" fill="url(#midMtn)" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <div class="relative z-10 max-w-5xl mx-auto text-center">
+      <div class="scroll-reveal">
+        <p class="stat-pill inline-block mb-4">AI Insights</p>
+        <h2 class="font-display text-ink-700" style="font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 400; letter-spacing: -0.03em;">
+          Intelligence That <span style="color: #3B68A2;">Understands You</span>
+        </h2>
+        <p class="font-body text-ink-400 mt-4 max-w-lg mx-auto" style="font-weight: 300; line-height: 1.7;">
+          Your ring learns your patterns and surfaces insights that matter, when they matter.
+        </p>
+      </div>
+
+      <!-- Insight cards row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-14">
+        <div class="widget-card p-6 text-left scroll-reveal">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-4" style="background: rgba(59,104,162,0.08);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B68A2" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <p class="font-body text-ink-700 text-sm font-medium">Sleep Pattern Detected</p>
+          <p class="font-body text-ink-400 text-xs mt-2" style="line-height: 1.6;">Your deep sleep increases by 18% when you finish dinner before 7pm. Consider earlier meals.</p>
+        </div>
+        <div class="widget-card p-6 text-left scroll-reveal">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-4" style="background: rgba(174,113,51,0.08);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AE7133" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <p class="font-body text-ink-700 text-sm font-medium">Recovery Score: 92</p>
+          <p class="font-body text-ink-400 text-xs mt-2" style="line-height: 1.6;">Excellent recovery overnight. Your HRV is 12% above your baseline — great day for high intensity.</p>
+        </div>
+        <div class="widget-card p-6 text-left scroll-reveal">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-4" style="background: rgba(28,57,89,0.08);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C3959" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <p class="font-body text-ink-700 text-sm font-medium">Weekly Trend</p>
+          <p class="font-body text-ink-400 text-xs mt-2" style="line-height: 1.6;">Stress levels are trending 15% lower this week compared to last. Your evening walks are making a difference.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <footer id="about" class="relative py-16 px-6" style="background: #1C3959;">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <img src="brand_assets/20260221-220434.jpeg" alt="NarraNexus" class="h-10 w-auto object-contain" style="filter: brightness(1.8) contrast(0.9);">
+        </div>
+        <!-- Links -->
+        <div class="flex items-center gap-8">
+          <a href="#" class="font-body text-sm transition-colors duration-300 hover:text-white" style="color: #94B3D3;">Privacy</a>
+          <a href="#" class="font-body text-sm transition-colors duration-300 hover:text-white" style="color: #94B3D3;">Terms</a>
+          <a href="#" class="font-body text-sm transition-colors duration-300 hover:text-white" style="color: #94B3D3;">Support</a>
+        </div>
+      </div>
+      <div class="subtle-divider my-8" style="background: linear-gradient(90deg, transparent, rgba(148,179,211,0.15), transparent);"></div>
+      <p class="text-center font-body text-xs" style="color: #5D8BB4;">
+        &copy; 2026 NarraNexus. Crafted with serenity.
+      </p>
+    </div>
+  </footer>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS                                               -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <script>
+    // Scroll reveal observer
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+    // Smooth nav scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+
+</body>
+</html>
