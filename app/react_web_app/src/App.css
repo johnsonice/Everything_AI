@@ -1,0 +1,515 @@
+/* ========== Layout: three-column production dashboard ========== */
+.app {
+  display: grid;
+  grid-template-columns: minmax(280px, 22%) 1fr minmax(300px, 26%);
+  min-height: 100vh;
+  width: 100%;
+  background: rgba(241, 245, 249, 0.85);
+}
+
+.app__sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border-right: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.app__sidebar--right {
+  border-right: none;
+  border-left: 1px solid #e2e8f0;
+}
+
+.app__main {
+  min-width: 0;
+  overflow: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .app {
+    grid-template-columns: minmax(260px, 28%) 1fr;
+  }
+  .app__sidebar--right {
+    grid-column: 1 / -1;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    max-height: 45vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .app__sidebar--left {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    max-height: 40vh;
+  }
+}
+
+/* ========== Left: Case list ========== */
+.case-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.case-list__search-wrap {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+}
+
+.case-list__search-icon {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.case-list__search {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #f8fafc;
+}
+
+.case-list__search::placeholder {
+  color: #94a3b8;
+}
+
+.case-list__search:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #fff;
+}
+
+.case-list__scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Case card */
+.case-card {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.case-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.case-card--selected {
+  border-color: #22c55e;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.case-card__id {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.case-card__status {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.status-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.status--green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status--blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status--amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status--grey {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.case-card__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.35;
+}
+
+.case-card__meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.case-card__meta dt {
+  font-weight: 600;
+  color: #475569;
+  margin-top: 0.25rem;
+}
+
+.case-card__meta dt:first-child { margin-top: 0; }
+
+.case-card__meta dd {
+  margin: 0 0 0 0.25rem;
+}
+
+/* ========== Center: Case detail cards ========== */
+.case-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 960px;
+}
+
+.case-detail__empty {
+  color: #64748b;
+  font-size: 1rem;
+  padding: 2rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Case overview */
+.case-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+}
+
+.case-overview__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.case-overview__row dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.case-overview__row dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+/* Attorney stats */
+.attorney-stats__chart,
+.attorney-stats__pie {
+  margin-bottom: 1rem;
+}
+
+.attorney-stats__chart-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 0.5rem 0;
+}
+
+.attorney-stats__metrics {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.metric__label {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.metric__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Parties */
+.parties-info__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .parties-info__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.party-block__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem 0;
+}
+
+.party-block__list {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.party-block__list dt {
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 0.4rem;
+}
+
+.party-block__list dt:first-child { margin-top: 0; }
+
+.party-block__list dd {
+  margin: 0 0 0 0.25rem;
+  color: #0f172a;
+}
+
+/* Procedural timeline */
+.timeline-wrap {
+  overflow-x: auto;
+}
+
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.timeline-table th,
+.timeline-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.timeline-table th {
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+}
+
+.timeline-table td {
+  color: #0f172a;
+}
+
+.timeline-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.timeline-status--active {
+  color: #166534;
+  font-weight: 500;
+}
+
+.timeline-status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+/* ========== Right: AI Legal Assistant ========== */
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #fff;
+}
+
+.chat-panel__header {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.chat-panel__header h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.message-list {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.message-list__empty {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.message {
+  max-width: 95%;
+  align-self: flex-start;
+}
+
+.message--user {
+  align-self: flex-end;
+}
+
+.message__role {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.message__content {
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message--user .message__content {
+  background: #2563eb;
+  color: #fff;
+}
+
+.message--assistant .message__content {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+
+.chat-input {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  background: #fff;
+}
+
+.chat-input__attach {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 1.2rem;
+  line-height: 1;
+  align-self: flex-end;
+}
+
+.chat-input__attach:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.chat-input__field {
+  flex: 1;
+  min-height: 48px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: none;
+}
+
+.chat-input__field::placeholder {
+  color: #94a3b8;
+}
+
+.chat-input__field:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #fff;
+}
+
+.chat-input__submit {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-input__submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.chat-input__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
